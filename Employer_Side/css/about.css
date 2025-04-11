@@ -1,0 +1,115 @@
+:root {
+  --primary-color: #073884;
+  --primary-hover: #003380;
+  --error-color: #dc3545;
+  --success-color: #28a745;
+}
+@font-face{
+  font-family: interBold;
+  src: url('fonts/Inter_Bold.ttf');
+}
+@font-face{
+  font-family: interSemiBold;
+  src: url('fonts/Inter_SemiBold.ttf');
+}
+@font-face{
+  font-family: interRegular;
+  src: url('fonts/Inter_Regular.ttf');
+}
+@font-face{
+  font-family: interExtraBold;
+  src: url('fonts/Inter_ExtraBold.ttf');
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.about_us {
+  width: 100vw;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  height: 300px;
+  overflow: hidden;
+  /* Break out of container to full width */
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+.about_us img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.about_us h1 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: calc(2rem + 4vw); /* Dynamic font size based on viewport width */
+  font-weight: bold;
+  text-align: center;
+  width: 100%;
+  z-index: 1;
+  padding: 0 10px; /* Prevent text from touching the edges */
+}
+
+/* Make sure the parent container also has no margins/padding */
+.about_us-container {
+  margin: 0;
+  padding: 0;
+}
+
+.about_text {
+  width: 90%; /* Gives some margin on the sides */
+  max-width: 1200px; /* Maximum width for larger screens */
+  margin: 0 auto; /* Centers the text container */
+  padding: 40px 20px; /* Adds space above and below text */
+}
+
+.about_text p {
+  font-size: 2em;
+  line-height: 1.6;
+  color: #333;
+  margin: 0;
+  text-align: center;
+  font-family: interRegular;
+}
+
+h1.partners {
+  padding-top: 10px;
+}
+ 
+/* Media query for mobile devices */
+@media screen and (max-width: 768px) {
+  .about_us {
+    height: 200px; /* Shorter height for mobile */
+    
+  }
+
+  .about_us h1 {
+    font-size: calc(1.5rem + 2vw); /* Smaller dynamic font size for mobile */
+    width: 90%; /* Prevent text from touching edges */
+  }
+
+  .about_text {
+    width: 85%;
+    padding: 30px 15px;
+}
+
+.about_text p {
+    font-size: 3vh;
+    line-height: 1.5;
+}
+}

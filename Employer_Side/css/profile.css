@@ -1,0 +1,363 @@
+:root {
+    --primary-color: #073884;
+    --primary-hover: #003380;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+}
+@font-face{
+    font-family: interBold;
+    src: url('fonts/Inter_Bold.ttf');
+}
+@font-face{
+    font-family: interSemiBold;
+    src: url('fonts/Inter_SemiBold.ttf');
+}
+@font-face{
+    font-family: interRegular;
+    src: url('fonts/Inter_Regular.ttf');
+}
+@font-face{
+    font-family: interExtraBold;
+    src: url('fonts/Inter_ExtraBold.ttf');
+}
+  
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}   
+
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.profile-container {
+    max-width: 800px;
+    padding: 20px 40px;
+    margin-left: auto; /* Space for sidebar */
+    margin-right: auto;
+}
+
+/* Profile Section */
+.profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.profile-image {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 20px;
+}
+
+.profile-image .initials-circle {
+    width: 100%;
+    height: 100%;
+    font-size: 48px;
+    font-family: interBold;
+}
+
+.profile-image .initials {
+    font-size: 48px;
+    font-family: interBold;
+}
+
+.profile-name {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: #333;
+    font-family: interBold;
+}
+
+.profile-subtitle {
+    font-size: 0.875rem;
+    color: #666;
+    font-family: interRegular;
+}
+
+#profile-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+    font-family: interBold;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+    font-family: interSemiBold;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: #333;
+    font-family: interRegular;
+}
+
+.form-input:disabled{
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: #333;
+    pointer-events: none;
+    font-family: interRegular;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.save-button {
+    width: 100%;
+    background-color: #002868;
+    color: white;
+    padding: 0.625rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    font-family: interSemiBold;
+}
+
+.save-button:hover {
+    background-color: #001f4d;
+}
+
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+}
+
+.modal.fade .modal-dialog {
+    transform: translate(0, -25%);
+    transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: translate(0, 0);
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    margin: 1.75rem auto;
+    max-width: 500px;
+    pointer-events: none;
+}
+
+.modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.3rem;
+    outline: 0;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 0.3rem;
+    border-top-right-radius: 0.3rem;
+}
+
+.modal-title {
+    margin: 0;
+    font-family: interBold;
+    font-size: 1.25rem;
+    color: #333;
+}
+
+.modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 1rem;
+}
+
+.modal-body .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.modal-body label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-family: interSemiBold;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.modal-body .form-control {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    font-family: interRegular;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.modal-body .form-control:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.modal-body .form-control::placeholder {
+    color: #6c757d;
+    font-family: interRegular;
+    opacity: 0.7;
+}
+
+.modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    border-bottom-left-radius: 0.3rem;
+    border-bottom-right-radius: 0.3rem;
+}
+
+.modal-footer > :not(:first-child) {
+    margin-left: 0.25rem;
+}
+
+.modal-footer .btn {
+    font-family: interSemiBold;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+}
+
+.modal-backdrop.fade {
+    opacity: 0;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5;
+}
+
+/* Prevent modal close on backdrop click */
+.modal-static {
+    transform: scale(1.02);
+}
+
+/* Password toggle styles */
+.password-container {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #858796;
+}
+
+.password-toggle:hover {
+  color: #4e73df;
+}
+
+/* Password validation message styles */
+.password-validation-message {
+  margin-top: 5px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  min-height: 20px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  font-family: interRegular;
+}
+
+.password-validation-message.match {
+  color: #155724;
+  background-color: #d4edda;
+}
+
+.password-validation-message.no-match {
+  color: #721c24;
+  background-color: #f8d7da;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .profile-container {
+        margin-left: 0;
+        padding: 1rem;
+    }
+
+    body {
+        background-color: white;
+    }
+
+    .form-input {
+        background-color: #f8f9fa;
+    }
+
+    #profile-form {
+        max-width: 100%;
+    }
+}

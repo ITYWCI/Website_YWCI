@@ -1,0 +1,414 @@
+:root {
+    --primary-color: #073884;
+    --primary-hover: #003380;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+}
+@font-face {
+    font-family: montserratBold;
+    src: url('./fonts/Montserrat-Bold.ttf');
+  }
+@font-face {
+    font-family: montserratSemiBold;
+    src: url('./fonts/Montserrat-SemiBold.ttf');
+  }
+@font-face {
+    font-family: montserratRegular;
+    src: url('./fonts/Montserrat-Regular.ttf');
+  }
+@font-face {
+    font-family: montserratExtraBold;
+    src: url('./fonts/Montserrat-ExtraBold.ttf');
+  }
+
+  .no-results {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 100%;
+}
+
+.empty-search {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    padding: 20px;
+}
+
+.empty-search i {
+    font-size: 24px;
+    color: #0052CC;
+    margin-bottom: 10px;
+}
+
+.empty-search p {
+    font-family: montserratRegular;
+    margin: 0;
+    color: #666;
+}
+
+.contacts-list {
+    position: relative;
+}
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: #0052CC;
+    margin-bottom: 20px;
+}
+
+.empty-state h2 {
+    font-family: montserratSemiBold;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    font-family: montserratRegular;
+    color: #888;
+}
+
+  .message-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-container i {
+    position: absolute;
+    left: 10px;
+    color: #666;
+}
+
+#messageSearch {
+    padding: 8px 8px 8px 35px;
+    border: 1px solid #eaeaea;
+    border-radius: 20px;
+    font-size: 14px;
+    width: 200px;
+    transition: width 0.3s ease;
+}
+
+#messageSearch:focus {
+    width: 250px;
+    outline: none;
+    border-color: #0052CC;
+}
+
+.compose-btn {
+    background: none;
+    border: none;
+    color: #0052CC;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.compose-btn:hover {
+    background-color: rgba(0, 82, 204, 0.1);
+}
+
+@media (max-width: 768px) {
+    .message-actions {
+        gap: 10px;
+    }
+
+    #messageSearch {
+        width: 150px;
+    }
+
+    #messageSearch:focus {
+        width: 180px;
+    }
+}
+
+.messages-container {
+    background: white;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.messages-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid #eaeaea;
+    background: white;
+    z-index: 10;
+}
+
+.messages-header .title {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.current-messenger {
+    font-weight: 500;
+    font-family: montserratSemiBold;
+}
+
+.chat-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    flex: 1;
+    overflow: hidden;
+}
+
+.contacts-list {
+    border-right: 1px solid #eaeaea;
+    overflow-y: auto;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eaeaea;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.contact-item:hover {
+    background-color: #f5f5f5;
+}
+
+.contact-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.contact-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.contact-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-name {
+    font-weight: bold;
+    font-size: 14px;
+    font-family: montserratBold;
+}
+
+.contact-preview {
+    font-size: 12px;
+    color: gray;
+    font-family: montserratRegular;
+}
+
+.chat-area {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.current-chat-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    border-bottom: 1px solid #eaeaea;
+    background: white;
+}
+
+.current-chat-avatar {
+    width: 40px; /* Adjusted size */
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.current-chat-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.current-chat-name {
+    font-size: 16px;
+    font-weight: bold;
+    font-family: montserratBold;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: white;
+}
+
+.message {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.message.sent {
+    justify-content: flex-start;
+}
+
+.message-content {
+    max-width: 60%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    font-family: montserratRegular;
+}
+
+.message.sent .message-content {
+    background-color: #0052CC;
+    color: white;
+}
+
+.time-stamp {
+    font-size: 12px;
+    margin-top: 4px;
+    opacity: 0.8;
+}
+
+.message-input {
+    padding: 20px;
+    border-top: 1px solid #eaeaea;
+    background: white;
+}
+
+.message-input input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.new-message-header {
+    padding: 15px;
+    border-bottom: 1px solid #eaeaea;
+    background: white;
+}
+
+.to-field-container {
+    padding: 10px 15px;
+    width: 100%;
+}
+
+.to-field-container input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: montserratRegular;
+    padding: 5px 0;
+}
+
+.to-field-container input::placeholder {
+    color: #666;
+}
+
+.contact-item.active {
+    background-color: #f0f2f5;
+}
+
+.no-results {
+    padding: 15px;
+    text-align: center;
+    color: #666;
+}
+
+.empty-search {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.empty-search i {
+    font-size: 20px;
+    color: #666;
+}
+
+.empty-search p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Style for the compose button active state */
+.compose-btn.active {
+    background-color: rgba(0, 82, 204, 0.1);
+}
+
+@media (min-width: 769px) {
+    .back-button {
+        display: none; /* Hide back button on desktop */
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .chat-container {
+        grid-template-columns: 1fr;
+    }
+
+    .contacts-list.hidden {
+        display: none;
+    }
+
+    .chat-area {
+        display: none;
+    }
+
+    .chat-area.active {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .back-button {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #0052CC;
+        cursor: pointer;
+        padding: 10px;
+        margin-right: 10px;
+    }
+
+    .current-chat-info {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #eaeaea;
+    }
+}

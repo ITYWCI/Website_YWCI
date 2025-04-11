@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="images/logo.png" type="image/png">
+    <title>YWCI Manpower Services |  Jobs</title>
+    <!-- Custom fonts for this template-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <!-- Custom styles for this template-->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/jobs.css">
+    <!-- Page level custom scripts -->
+    <!-- Firebase -->
+    <script type="module" src="js/logout.js"></script>
+    <script type="module" src="js/jobs.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+  <body id="page-top" class="sidebar-toggled">
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+      <!-- Sidebar -->
+      <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion toggled" id="accordionSidebar">
+        <!-- Sidebar - Brand -->
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="dashboard.html">
+          <div class="sidebar-brand-icon">
+            <img src="images/logo.png" alt="YWCI Logo" width="50" height="50">
+          </div>
+          <div class="sidebar-brand-text mx-3">YWCI <br>
+            <sup>Manpower Services</sup>
+          </div>
+        </a>
+        <!-- Nav Item - Dashboard -->
+        <div class="dashboard">
+          <li class="nav-item">
+            <a class="nav-link" href="dashboard.html">
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+        </div>
+        <!-- Divider -->
+        <hr class="sidebar-divider">
+        <!-- Nav Item - Applicants -->
+        <li class="nav-item">
+          <a class="nav-link" href="applicants.html">
+            <i class="fas fa-users"></i>
+            <span>Applicants</span>
+          </a>
+        </li>
+        <!-- Nav Item - Jobs -->
+        <li class="nav-item active">
+          <a class="nav-link" href="jobs.html">
+            <i class="fas fa-briefcase"></i>
+            <span>Jobs</span>
+          </a>
+        </li>
+        <!-- Divider -->
+        <hr class="sidebar-divider">
+        <!-- Nav Item - About -->
+        <li class="nav-item">
+          <a class="nav-link" href="about.html">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>About</span>
+          </a>
+        </li>
+        <!-- Divider -->
+        <hr class="sidebar-divider d-none d-md-block">
+      </ul>
+      <!-- End of Sidebar -->
+      <!-- Content Wrapper -->
+      <div id="content-wrapper" class="d-flex flex-column">
+        <!-- Main Content -->
+        <div id="content">
+          <!-- Topbar -->
+          <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+            <!-- Sidebar Toggle (Topbar) -->
+            <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+              <i class="fa fa-bars"></i>
+            </button>
+            <!-- Topbar Navbar -->
+            <ul class="navbar-nav ml-auto">
+              <!-- Dropdown - Messages -->
+              <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in" aria-labelledby="searchDropdown">
+                <form class="form-inline mr-auto w-100 navbar-search">
+                  <div class="input-group">
+                    <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
+                    <div class="input-group-append">
+                      <button class="btn btn-primary" type="button">
+                        <i class="fas fa-search fa-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              </li>
+              <!-- Nav Item - Messages -->
+              <li class="nav-item dropdown no-arrow mx-1">
+                <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <i class="fas fa-envelope fa-fw"></i>
+                  <!-- Counter - Messages -->
+                  <span class="badge badge-danger badge-counter">7</span>
+                </a>
+                <!-- Dropdown - Messages -->
+                <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="messagesDropdown">
+                  <h6 class="dropdown-header"> Message Center </h6>
+                  <a class="dropdown-item d-flex align-items-center" href="#">
+                    <div class="dropdown-list-image mr-3">
+                      <img class="rounded-circle" src="images/player101.png" alt="Deok-su Jang">
+                      <div class="status-indicator bg-success"></div>
+                    </div>
+                    <div class="font-weight-bold">
+                      <div class="text-truncate">Last message preview here...</div>
+                      <div class="small text-gray-500">Deok-su Jang · 5m</div>
+                    </div>
+                  </a>
+                  <a class="dropdown-item d-flex align-items-center" href="#">
+                    <div class="dropdown-list-image mr-3">
+                      <img class="rounded-circle" src="images/player199.png" alt="Ali Abdel">
+                      <div class="status-indicator"></div>
+                    </div>
+                    <div>
+                      <div class="text-truncate">Last message preview here...</div>
+                      <div class="small text-gray-500">Ali Abdel · 20m</div>
+                    </div>
+                  </a>
+                  <a class="dropdown-item d-flex align-items-center" href="#">
+                    <div class="dropdown-list-image mr-3">
+                      <img class="rounded-circle" src="images/player218.png" alt="Cho Sang-woo">
+                      <div class="status-indicator bg-warning"></div>
+                    </div>
+                    <div>
+                      <div class="text-truncate">Last message preview here...</div>
+                      <div class="small text-gray-500">Cho Sang-woo · 1h</div>
+                    </div>
+                  </a>
+                  <a class="dropdown-item d-flex align-items-center" href="#">
+                    <div class="dropdown-list-image mr-3">
+                      <img class="rounded-circle" src="images/player067.png" alt="Sae-Byeok Kang">
+                      <div class="status-indicator bg-success"></div>
+                    </div>
+                    <div>
+                      <div class="text-truncate">Last message preview here...</div>
+                      <div class="small text-gray-500">Sae-Byeok Kang · 3h</div>
+                    </div>
+                  </a>
+                  <a class="dropdown-item d-flex align-items-center" href="#">
+                    <div class="dropdown-list-image mr-3">
+                      <img class="rounded-circle" src="images/player388.png" alt="Kang Dae-Ho">
+                      <div class="status-indicator"></div>
+                    </div>
+                    <div>
+                      <div class="text-truncate">Last message preview here...</div>
+                      <div class="small text-gray-500">Kang Dae-Ho · 1d</div>
+                    </div>
+                  </a>
+                  <a class="dropdown-item d-flex align-items-center" href="#">
+                    <div class="dropdown-list-image mr-3">
+                      <img class="rounded-circle" src="images/player222.png" alt="Kim Jun-hee">
+                      <div class="status-indicator bg-warning"></div>
+                    </div>
+                    <div>
+                      <div class="text-truncate">Last message preview here...</div>
+                      <div class="small text-gray-500">Kim Jun-hee · 2d</div>
+                    </div>
+                  </a>
+                  <a class="dropdown-item text-center small text-gray-500" href="inbox.html">Read More Messages</a>
+                </div>
+              </li>
+              <div class="topbar-divider d-none d-sm-block"></div>
+              <!-- Nav Item - User Information -->
+              <li class="nav-item dropdown no-arrow">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span class="mr-2 d-none d-lg-inline text-gray-600 small"></span>
+                  <img class="img-profile rounded-circle" src="images/profile.png">
+                </a>
+                <!-- Dropdown - User Information -->
+                <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                  <a class="dropdown-item" href="profile.html">
+                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profile </a>
+                    <a class="dropdown-item" href="#" id="archivesButton">
+                      <i class="fas fa-archive fa-sm fa-fw mr-2 text-gray-400"></i> Archives
+                  </a>
+                  <a class="dropdown-item logout-button" href="login.html">
+                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Logout </a>
+                </div>
+              </li>
+            </ul>
+          </nav>
+          <!-- End of Topbar -->
+          <!-- Begin Page Content -->
+          <div class="container-fluid">
+            <!-- Floating Action Button -->
+            <button id="addJobBtn" class="floating-btn">
+              <i class="fas fa-plus"></i>
+            </button>
+            <!-- Add Job Modal -->
+            <div id="addJobModal" class="modal">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h2>Add a Job</h2>
+                  <span class="close">&times;</span>
+                </div>
+                <form id="jobForm" novalidate>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="jobTitle" class="job-title-label">Job Title*</label>
+                      <input type="text" id="jobTitle" required class="job-title-input" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                      <div class="company-header">
+                        <label for="company" class="company-label">Company*</label>
+                        <div class="company-checkbox custom-control custom-checkbox">
+                          <input type="checkbox" class="custom-control-input" id="otherCompany">
+                          <label class="custom-control-label" for="otherCompany">Other Company</label>
+                        </div>
+                      </div>
+                      <input type="text" id="company" required class="company-input" disabled>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="location" class="location-label">Location*</label>
+                      <div class="location-wrapper">
+                        <select id="region" class="location-select" required>
+                          <option value="">Select Region</option>
+                        </select>
+                        <select id="province" class="location-select" required>
+                          <option value="">Select Province</option>
+                        </select>
+                        <select id="city" class="location-select" required>
+                          <option value="">Select City/Municipality</option>
+                        </select>
+                        <input type="hidden" id="location" name="location">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <div class="salary-header">
+                        <label for="salary" class="salary-label">Rate*</label>
+                        <div class="salary-type-selector">
+                          <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="salaryConfidential">
+                            <label class="custom-control-label" for="salaryConfidential">Confidential</label>
+                          </div>
+                          <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="salaryRange">
+                            <label class="custom-control-label" for="salaryRange">Salary Range</label>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Single Salary Input (Default) -->
+                      <div id="singleSalaryInput">
+                        <input type="text" class="form-control" id="salary" placeholder="Enter rate" autocomplete="off">
+                      </div>
+                      <!-- Range Salary Inputs (Hidden by default) -->
+                      <div id="rangeSalaryInputs" style="display: none;">
+                        <div class="salary-range">
+                          <input type="text" class="form-control" id="jobMinSalary" placeholder="Minimum" inputmode="numeric" pattern="[0-9,]*" autocomplete="off">
+                          <span class="range-separator">to</span>
+                          <input type="text" class="form-control" id="jobMaxSalary" placeholder="Maximum" inputmode="numeric" pattern="[0-9,]*" autocomplete="off">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="job-type">Job Type*</label>
+                      <select id="job-type" required>
+                        <option value="">Select Job Type</option>
+                        <option value="full-time">Full Time</option>
+                        <option value="part-time">Part Time</option>
+                        <option value="contractual">Contractual</option>
+                        <option value="probational">Probational</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="companyDescription" style="font-family: interSemiBold;">Company Description</label>
+                    <textarea 
+                        id="companyDescription" 
+                        name="companyDescription" 
+                        rows="5" 
+                        style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; font-family: montserratRegular;"
+                        placeholder="Enter company description here..."></textarea>
+                </div>
+                  <div class="form-group">
+                    <label for="description">Description</label>
+                    <div class="editor-container">
+                      <div class="toolbar">
+                        <!-- Previous toolbar groups remain the same until the list group -->
+                        <div class="toolbar-group">
+                          <button type="button" onclick="performUndo()" title="Undo">↶</button>
+                          <button type="button" onclick="performRedo()" title="Redo">↷</button>
+                        </div>
+                        <div class="toolbar-group">
+                          <button type="button" onclick="formatText('bold')" title="Bold">
+                            <b>B</b>
+                          </button>
+                          <button type="button" onclick="formatText('italic')" title="Italic">
+                            <i>I</i>
+                          </button>
+                          <button type="button" onclick="formatText('underline')" title="Underline">
+                            <u>U</u>
+                          </button>
+                        </div>
+                        <div class="toolbar-group">
+                          <button type="button" id="bulletBtn" onclick="toggleList('bullet')" title="Bullet List">
+                            <i class="fas fa-list-ul"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div id="editor" contenteditable="true"></div>
+                    </div>
+                  </div>
+                  <div class="button-group">
+                    <button type="submit" class="submit-btn">Upload Job</button>
+                    <button type="button" class="cancel-btn">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <!-- View Job Modal -->
+            <div id="viewJobModal" class="modal">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <div class="modal-title-section">
+                    <h2 class="modal-job-title"></h2>
+                    <span class="modal-job-type full-time"></span>
+                  </div>
+                  <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-company-info">
+                  <span class="modal-company"></span>
+                  <span class="modal-location"></span>
+                  <span class="modal-salary"></span>
+                </div>
+                <div class="modal-body">
+                  <div class="modal-section">
+                    <p class="modal-description"></p>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button class="delete-button">Delete Job</button>
+                  <button class="edit-button">Edit Job</button>
+                </div>
+              </div>
+            </div>
+            <!--Job Filter-->
+            <div class="filter-container">
+              <div class="search-filters">
+                <input type="text" id="searchInput" class="filter-input" placeholder="Search jobs...">
+                <select id="jobTypeFilter" class="filter-select">
+                  <option value="">All Job Types</option>
+                  <option value="full time">Full Time</option>
+                  <option value="part time">Part Time</option>
+                  <option value="probational">Probational</option>
+                  <option value="contractual">Contractual</option>
+                </select>
+                <select id="locationFilter" class="filter-select">
+                  <option value="">All Locations</option>
+                </select>
+                <select id="salaryTypeFilter" class="filter-select">
+                  <option value="">All Salary Types</option>
+                  <option value="fixed">Fixed Rate</option>
+                  <option value="range">Salary Range</option>
+                  <option value="confidential">Confidential</option>
+                </select>
+                <button id="resetFilters" class="filter-reset">Reset Filters</button>
+              </div>
+            </div>
+            <div class="container">
+              <!--Shows "no jobs found"-->
+              <div style="text-align: center; padding: 40px 20px; margin: 20px auto; max-width: 500px;" id="noResultsMessage">
+                <img src="images/noResults.svg" alt="No results found" style="max-width: 300px; height: auto; margin-bottom: 20px;">
+                <h2 style="font-family: interBold; font-size: 24px; margin-bottom: 10px;">We searched everywhere</h2>
+                <p style="font-family: interRegular; font-size: 16px; margin-bottom: 20px;">But we couldn't find any jobs that match your current filter criteria.</p>
+                <button id="clearFiltersBtn" style="font-family: interSemiBold; padding: 10px 20px; background-color: #f5f5f5; color: black; border: none; border-radius: 4px; cursor: pointer;">Clear filters</button>
+              </div>
+              <div style="text-align: center; padding: 40px 20px; margin: 20px auto; max-width: 500px;" id="noDataFound">
+                <img src="images/noData.svg" alt="No results found" style="max-width: 300px; height: auto; margin-bottom: 20px;">
+                <h2 style="font-family: interBold; font-size: 24px; margin-bottom: 10px;">Uh Oh! No jobs yet!</h2>
+                <p style="font-family: interRegular; font-size: 16px; margin-bottom: 20px;">This page is empty because you haven't added any jobs yet. You can add a job by clicking the floating button or try checking the archives to restore any deleted jobs if there are any. </p>
+            </div>
+            </div>
+          </div>
+
+          <div id="archivesModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Archived Jobs</h2>
+                    <button class="close">&times;</button>
+                </div>
+                <div class="archives-controls">
+                    <button id="selectAllArchives" class="select-all-btn">
+                        <i class="fas fa-check-square"></i> Select All
+                    </button>
+                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th>Job Name</th>
+                            <th>Company</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archivesTableBody">
+                        <!-- Archive items will be dynamically inserted here -->
+                    </tbody>
+                </table>
+                <div class="action-buttons">
+                    <button id="restoreBtn" class="restore-btn" disabled>Restore</button>
+                    <button id="deleteBtn" class="delete-btn" disabled>Delete</button>
+                </div>
+            </div>
+          </div>
+          <!--Contents of the card will be filled by the firebase-->
+          <!-- /.container-fluid -->
+          <!-- End of Main Content -->
+        </div>
+        <!-- End of Content Wrapper -->
+      </div>
+      <!-- End of Page Wrapper -->
+      <!-- Scroll to Top Button-->
+      <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+      </a>
+      <!-- Bootstrap core JavaScript-->
+      <script src="js/jquery.min.js"></script>
+      <script src="js/bootstrap.bundle.min.js"></script>
+      <!-- Custom scripts for all pages-->
+      <script type="module" src="js/script.js"></script>
+      <!-- Page level plugins -->
+      <script type src="js/Chart.min.js"></script>
+  </body>
+</html>

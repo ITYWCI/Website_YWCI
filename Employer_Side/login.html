@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="css/login.css">
+    <script type = "module" src="js/login.js"></script>
+  </head>
+  <body>
+    <div class="loading-overlay">
+      <div class="loader"></div>
+  </div>
+
+  <div class="container">
+    <div class="login-box">
+        <img src="images/logo_full.png" alt="YWC Logo" class="logo">
+        <div class="form-box">
+            <h1>Login to Your Account</h1>
+            <form id="loginForm" method="post" autocomplete="on">
+                <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="Enter Email or Username" 
+                    class="input-field"
+                    autocomplete="username"
+                    required
+                >
+                <input 
+                    type="password" 
+                    name="password" 
+                    placeholder="Password" 
+                    class="input-field"
+                    autocomplete="current-password"
+                    required
+                >
+                <button type="submit" class="sign-in-btn">Sign In</button>
+                <a href="../User/login.html" class="user-login">User Login</a>
+            </form>
+        </div>
+    </div>
+  </div>
+  </div>
+  </body>
+</html>

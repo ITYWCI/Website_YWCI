@@ -1,0 +1,353 @@
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <meta name="description" content="">
+      <meta name="author" content="">
+      <link rel="icon" href="images/logo.png" type="image/png">
+      <title>YWCI Manpower Services | Applicants</title>
+      <!-- Custom fonts for this template-->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+      <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+      <!-- Custom styles for this template-->
+      <link rel="stylesheet" href="css/style.css">
+      <link rel="stylesheet" href="css/applicants.css">
+        <!-- Page level custom scripts -->
+        <!-- Firebase -->
+        <script type="module" src="js/auth.js"></script>
+        <script type="module" src="js/logout.js"></script>
+        <script type="module" src="js/applicants.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+        <script>
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        </script>
+    </head>
+    <body id="page-top" class="sidebar-toggled">
+      <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+      <!-- Page Wrapper -->
+      <div id="wrapper">
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion toggled" id="accordionSidebar">
+          <!-- Sidebar - Brand -->
+          <a class="sidebar-brand d-flex align-items-center justify-content-center" href="dashboard.html">
+            <div class="sidebar-brand-icon">
+              <img src="images/logo.png" alt="YWCI Logo" width="50" height="50">
+            </div>
+            <div class="sidebar-brand-text mx-3">YWCI <br>
+              <sup>Manpower Services</sup>
+            </div>
+          </a>
+          <!-- Nav Item - Dashboard -->
+          <div class="dashboard">
+            <li class="nav-item">
+              <a class="nav-link" href="dashboard.html">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+          </div>
+          <!-- Divider -->
+          <hr class="sidebar-divider">
+          <!-- Nav Item - Applicants -->
+          <li class="nav-item active">
+            <a class="nav-link" href="applicants.html">
+              <i class="fas fa-users"></i>
+              <span>Applicants</span>
+            </a>
+          </li>
+          <!-- Nav Item - Jobs -->
+          <li class="nav-item">
+            <a class="nav-link" href="jobs.html">
+              <i class="fas fa-briefcase"></i>
+              <span>Jobs</span>
+            </a>
+          </li>
+          <!-- Divider -->
+          <hr class="sidebar-divider">
+          <!-- Nav Item - About -->
+          <li class="nav-item">
+            <a class="nav-link" href="about.html">
+              <i class="fas fa-exclamation-circle"></i>
+              <span>About</span>
+            </a>
+          </li>
+          <!-- Divider -->
+          <hr class="sidebar-divider d-none d-md-block">
+        </ul>
+        <!-- End of Sidebar -->
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+          <!-- Main Content -->
+          <div id="content">
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+              <!-- Sidebar Toggle (Topbar) -->
+              <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                <i class="fa fa-bars"></i>
+              </button>
+              <!-- Topbar Navbar -->
+              <ul class="navbar-nav ml-auto">
+                <!-- Nav Item - Search Dropdown (Visible Only XS) -->
+                <li class="nav-item dropdown no-arrow d-sm-none">
+                  <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-search fa-fw"></i>
+                  </a>
+                  <!-- Dropdown - Messages -->
+                  <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in" aria-labelledby="searchDropdown">
+                    <form class="form-inline mr-auto w-100 navbar-search">
+                      <div class="input-group">
+                        <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
+                        <div class="input-group-append">
+                          <button class="btn btn-primary" type="button">
+                            <i class="fas fa-search fa-sm"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </li>
+                <!-- Nav Item - Messages -->
+                <li class="nav-item dropdown no-arrow mx-1">
+                  <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-envelope fa-fw"></i>
+                    <!-- Counter - Messages -->
+                    <span class="badge badge-danger badge-counter">7</span>
+                  </a>
+                  <!-- Dropdown - Messages -->
+                  <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="messagesDropdown">
+                    <h6 class="dropdown-header"> Message Center </h6>
+                    <a class="dropdown-item d-flex align-items-center" href="#">
+                      <div class="dropdown-list-image mr-3">
+                        <img class="rounded-circle" src="images/player101.png" alt="Deok-su Jang">
+                        <div class="status-indicator bg-success"></div>
+                      </div>
+                      <div class="font-weight-bold">
+                        <div class="text-truncate">Last message preview here...</div>
+                        <div class="small text-gray-500">Deok-su Jang · 5m</div>
+                      </div>
+                    </a>
+                    <a class="dropdown-item d-flex align-items-center" href="#">
+                      <div class="dropdown-list-image mr-3">
+                        <img class="rounded-circle" src="images/player199.png" alt="Ali Abdel">
+                        <div class="status-indicator"></div>
+                      </div>
+                      <div>
+                        <div class="text-truncate">Last message preview here...</div>
+                        <div class="small text-gray-500">Ali Abdel · 20m</div>
+                      </div>
+                    </a>
+                    <a class="dropdown-item d-flex align-items-center" href="#">
+                      <div class="dropdown-list-image mr-3">
+                        <img class="rounded-circle" src="images/player218.png" alt="Cho Sang-woo">
+                        <div class="status-indicator bg-warning"></div>
+                      </div>
+                      <div>
+                        <div class="text-truncate">Last message preview here...</div>
+                        <div class="small text-gray-500">Cho Sang-woo · 1h</div>
+                      </div>
+                    </a>
+                    <a class="dropdown-item d-flex align-items-center" href="#">
+                      <div class="dropdown-list-image mr-3">
+                        <img class="rounded-circle" src="images/player067.png" alt="Sae-Byeok Kang">
+                        <div class="status-indicator bg-success"></div>
+                      </div>
+                      <div>
+                        <div class="text-truncate">Last message preview here...</div>
+                        <div class="small text-gray-500">Sae-Byeok Kang · 3h</div>
+                      </div>
+                    </a>
+                    <a class="dropdown-item d-flex align-items-center" href="#">
+                      <div class="dropdown-list-image mr-3">
+                        <img class="rounded-circle" src="images/player388.png" alt="Kang Dae-Ho">
+                        <div class="status-indicator"></div>
+                      </div>
+                      <div>
+                        <div class="text-truncate">Last message preview here...</div>
+                        <div class="small text-gray-500">Kang Dae-Ho · 1d</div>
+                      </div>
+                    </a>
+                    <a class="dropdown-item d-flex align-items-center" href="#">
+                      <div class="dropdown-list-image mr-3">
+                        <img class="rounded-circle" src="images/player222.png" alt="Kim Jun-hee">
+                        <div class="status-indicator bg-warning"></div>
+                      </div>
+                      <div>
+                        <div class="text-truncate">Last message preview here...</div>
+                        <div class="small text-gray-500">Kim Jun-hee · 2d</div>
+                      </div>
+                    </a>
+                    <a class="dropdown-item text-center small text-gray-500" href="inbox.html">Read More Messages</a>
+                  </div>
+                </li>
+                <div class="topbar-divider d-none d-sm-block"></div>
+                <!-- Nav Item - User Information -->
+                <li class="nav-item dropdown no-arrow">
+                  <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="mr-2 d-none d-lg-inline text-gray-600 small"></span>
+                    <img class="img-profile rounded-circle" src="images/profile.png">
+                  </a>
+                  <!-- Dropdown - User Information -->
+                  <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                    <a class="dropdown-item" href="profile.html">
+                      <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profile </a>
+                    <a class="dropdown-item logout-button" href="login.html">
+                      <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Logout </a>
+                  </div>
+                </li>
+              </ul>
+            </nav>
+            <!-- End of Topbar -->
+            <!-- Begin Page Content -->
+            <div class="filter-container">
+              <div class="search-row">
+                  <div class="filter-group full-width">
+                      <label for="nameSearch">Search by Name:</label>
+                      <input type="text" class = "filter-input" id="nameSearch" placeholder="Enter applicant name...">
+                  </div>
+              </div>
+              <div class="filter-row">
+                  <div class="filter-group">
+                      <label for="jobFilter">Position:</label>
+                      <select id="jobFilter">
+                          <option value="all">All Positions</option>
+                      </select>
+                  </div>
+                  <div class="filter-group">
+                      <label for="statusFilter">Status:</label>
+                      <select id="statusFilter">
+                          <option value="all">All Statuses</option>
+                      </select>
+                  </div>
+                  <div class="filter-group">
+                      <label for="dateFromFilter">From:</label>
+                      <input type="date" id="dateFromFilter">
+                  </div>
+                  <div class="filter-group">
+                      <label for="dateToFilter">To:</label>
+                      <input type="date" id="dateToFilter">
+                  </div>
+                  <div class="filter-buttons">
+                      <button id="resetFilters" class="filter-btn">Reset</button>
+                  </div>
+              </div>
+          </div>
+
+            <div class="container">
+              <div class="users-list">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Job Position</th>
+                      <th>Applied Date</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="userTableBody">
+                    <!-- Users will be inserted here by JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+              <div style="text-align: center; padding: 40px 20px; margin: 20px auto; max-width: 500px;" id="noResultsMessage">
+                <img src="images/noResults.svg" alt="No results found" style="max-width: 300px; height: auto; margin-bottom: 20px;">
+                <h2 style="font-family: interBold; font-size: 24px; margin-bottom: 10px;">We searched everywhere</h2>
+                <p style="font-family: interRegular; font-size: 16px; margin-bottom: 20px;">But we couldn't find any applicants that match your current filter criteria.</p>
+                <button id="clearFiltersBtn" style="font-family: interSemiBold; padding: 10px 20px; background-color: #f5f5f5; color: black; border: none; border-radius: 4px; cursor: pointer;">Clear filters</button>
+            </div>
+            <div style="text-align: center; padding: 40px 20px; margin: 20px auto; max-width: 500px;" id="noDataFound">
+              <img src="images/noData.svg" alt="No results found" style="max-width: 300px; height: auto; margin-bottom: 20px;">
+              <h2 style="font-family: interBold; font-size: 24px; margin-bottom: 10px;">Uh Oh! No applicants yet!</h2>
+              <p style="font-family: interRegular; font-size: 16px; margin-bottom: 20px;">This page is quite empty. Wait for someone to apply to your jobs and you'll see them here!</p>
+        </div>
+            </div>
+            <!-- Modal -->
+            <div id="resumeModal" class="modal">
+              <div class="modal-content">
+                <span class="close">&times;</span>
+                <div class="profile-section">
+                  <div class="profile-img">
+                    <img id="modalAvatar" src="" alt="Profile">
+                  </div>
+                  <div class="profile-name" id="modalName"></div>
+                  <div class="profile-contact">
+                    <div id="modalContact"></div>
+                    <div id="modalEmail"></div>
+                  </div>
+                  <div class="skills-section">
+                    <div class="skills-title">Skills:</div>
+                    <div class="skills-list" id="modalSkills"></div>
+                  </div>
+                </div>
+                <div class="resume-container" id="pdfContainer"> Resume Container </div>
+                <div class="action-section">
+                  <form id="actionForm">
+                    <div class="form-group">
+                      <label>Action:</label>
+                      <select id="actionSelect" required>
+                        <option value="" disabled selected>Select an action</option> 
+                        <option value="shortlist">Move to Shortlist</option>
+                        <option value="under-review">Mark as Reviewed</option>
+                        <option value="rejected">Reject Application</option>
+                        <option value="interview">Schedule for Interview</option>
+                      </select>
+                    </div>
+                    <div id="interviewSection" class="interview-section" style="display: none;">
+                      <div class="form-group">
+                        <label>Message:</label>
+                        <textarea id="interviewMessage" rows="4" required></textarea>
+                      </div>
+                      <div class="form-group" id="dateTimeGroup" style="display: none;">
+                        <label>Date and Time:</label>
+                        <input type="date" placeholder="mm/dd/yyyy" id="interviewDate">
+                        <input type="time" id="interviewTime">
+                      </div>
+                    </div>
+                    <button type="button" id="submitAction" class="submit-btn">Submit</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div id="pdfFullscreen" class="pdf-fullscreen">
+              <div class="fullscreen-content">
+                <canvas id="pdfViewerFullscreen"></canvas>
+                <div class="fullscreen-controls">
+                  <button id="prevPageFullscreen">◀ Previous</button>
+                  <span id="pageNumFullscreen" class="page-info">Page 1 of 1</span>
+                  <button id="nextPageFullscreen">Next ▶</button>
+                  <div class="zoom-controls">
+                    <button id="zoomOutFullscreen">
+                      <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button id="zoomInFullscreen">
+                      <i class="fas fa-search-plus"></i>
+                    </button>
+                  </div>
+                  <button id="fullscreenClose">✕</button>
+                </div>
+              </div>
+            </div>
+            <!-- End of Main Content -->
+          </div>
+          <!-- End of Content Wrapper -->
+        </div>
+        <!-- End of Page Wrapper -->
+        <!-- Scroll to Top Button-->
+        <a class="scroll-to-top rounded" href="#page-top">
+          <i class="fas fa-angle-up"></i>
+        </a>
+        <!-- Bootstrap core JavaScript-->
+        <script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.bundle.min.js"></script>
+        <!-- Custom scripts for all pages-->
+        <script type="module" src="js/script.js"></script>
+        <!-- Page level plugins -->
+        <script src="js/Chart.min.js"></script>
+        </body>
+  </html>
