@@ -20,6 +20,7 @@ const loginForm = document.getElementById('loginForm');
 const emailInput = document.querySelector('input[type="email"]');
 const passwordInput = document.querySelector('input[type="password"]');
 const signInButton = document.querySelector('.sign-in-btn');
+const adminLogo = document.getElementById('adminLogo');
 
 // Email validation function
 function isValidEmail(email) {
@@ -140,6 +141,30 @@ async function handleLogin(e) {
         console.error("Login error:", error);
         confirm("An error occurred during login. Please try again.");
     }
+}
+
+// Add click counter for admin redirect
+let logoClickCount = 0;
+let lastClickTime = 0;
+const CLICK_TIMEOUT = 2000; // Reset counter after 2 seconds of inactivity
+
+if (adminLogo) {
+    adminLogo.addEventListener('click', () => {
+        const currentTime = new Date().getTime();
+        
+        // Reset counter if more than 2 seconds have passed since last click
+        if (currentTime - lastClickTime > CLICK_TIMEOUT) {
+            logoClickCount = 0;
+        }
+        
+        lastClickTime = currentTime;
+        logoClickCount++;
+        
+        // Redirect to admin login after 3 clicks
+        if (logoClickCount === 3) {
+            window.location.href = '../Admin/admin_login.html';
+        }
+    });
 }
 
 // Add event listeners
