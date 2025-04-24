@@ -1,37 +1,56 @@
-import { db } from './auth.js';
-import { 
-    collection, 
-    query, 
-    where, 
-    getDocs, 
-    orderBy 
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { db, auth, initializeFirebase } from './auth.js';
+
+// Initialize Firebase first
+initializeFirebase().then(() => {
+    console.log('Firebase initialized in newApplicants.js');
+    // Call displayRecentApplicants after Firebase is initialized
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', displayRecentApplicants);
+    } else {
+        displayRecentApplicants();
+    }
+}).catch(error => {
+    console.error("Error initializing Firebase in newApplicants:", error);
+});
 
 async function displayRecentApplicants() {
     try {
+        // Make sure Firebase is initialized
+        if (!auth.currentUser) {
+            console.log('Waiting for authentication...');
+            return;
+        }
+
         // Calculate date 7 days ago
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        // Query for applications
-        const applicationsRef = collection(db, "applicants");
-        const applicationsQuery = query(
-            applicationsRef,
-            where("createdAt", ">=", sevenDaysAgo),
-            orderBy("createdAt", "desc")
-        );
-
-        const querySnapshot = await getDocs(applicationsQuery);
+        // Use the server endpoint to get applicants
+        const response = await fetch('/api/applicants', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch applicants: ${response.statusText}`);
+        }
+        
+        const applicants = await response.json();
         const recentApplicants = [];
-
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
-            recentApplicants.push({
-                name: `${data.firstName} ${data.middleName ? data.middleName + ' ' : ''}${data.lastName}`,
-                jobTitle: data.jobTitle || 'N/A',
-                company: data.company || 'N/A',
-                createdAt: data.createdAt?.toDate() || new Date(),
-            });
+        
+        // Process the applicants data
+        applicants.forEach(data => {
+            // Filter for recent applicants (within the last 7 days)
+            const createdAt = data.createdAt?.toDate?.() || new Date(data.createdAt);
+            if (createdAt >= sevenDaysAgo) {
+                recentApplicants.push({
+                    name: `${data.firstName} ${data.middleName ? data.middleName + ' ' : ''}${data.lastName}`,
+                    jobTitle: data.jobTitle || 'N/A',
+                    company: data.company || 'N/A',
+                    createdAt: data.createdAt?.toDate() || new Date()
+                });
+            }
         });
 
         // Get and style the container
@@ -157,5 +176,4 @@ async function displayRecentApplicants() {
     }
 }
 
-// Initialize when the page loads
-document.addEventListener('DOMContentLoaded', displayRecentApplicants);
+// We're now initializing in the initializeFirebase().then() call above

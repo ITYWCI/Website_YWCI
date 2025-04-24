@@ -1,19 +1,9 @@
 // Import Firebase modules
 import {
     auth,
-    db 
+    db,
+    initializeFirebase
 } from './auth.js';
-
-import { 
-    signInWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-
-import { 
-    collection, 
-    query, 
-    where, 
-    getDocs 
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 // Get DOM elements
 const loginForm = document.getElementById('loginForm');
@@ -33,28 +23,43 @@ function isValidPassword(password) {
     return password.length >= 6;
 }
 
+// Initialize Firebase first
+initializeFirebase().then(() => {
+    console.log('Firebase initialized in login.js');
+    
+    // Add event listener to login form after Firebase is initialized
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+}).catch(error => {
+    console.error("Error initializing Firebase in login:", error);
+});
+
 // Check if employer exists and get their email
 async function getEmployerEmail(identifier) {
     try {
-        const employersRef = collection(db, "employers");
-        let q;
-        
-        // Check if the identifier is an email or username
-        if (isValidEmail(identifier)) {
-            q = query(employersRef, where("email", "==", identifier.toLowerCase()));
-        } else {
-            q = query(employersRef, where("username", "==", identifier));
+        // Make sure Firebase is initialized
+        if (!auth || !db) {
+            await initializeFirebase();
         }
         
-        const querySnapshot = await getDocs(q);
+        // Use the server API to check credentials
+        const response = await fetch('/api/auth/check-credentials', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ identifier })
+        });
         
-        if (!querySnapshot.empty) {
-            const userData = querySnapshot.docs[0].data();
-            return userData.email.toLowerCase();
+        if (response.ok) {
+            const data = await response.json();
+            return data.email;
         }
+        
         return null;
     } catch (error) {
-        console.error("Error checking employer:", error);
+        console.error("Error checking credentials:", error);
         return null;
     }
 }
@@ -98,6 +103,9 @@ async function handleLogin(e) {
 
         // Try to sign in with Firebase Auth
         try {
+            // Dynamically import Firebase auth for login
+            const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js");
+            
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             
@@ -113,7 +121,8 @@ async function handleLogin(e) {
             if (lastVisitedUrl && !lastVisitedUrl.includes('login.html')) {
                 window.location.href = lastVisitedUrl;
             } else {
-                window.location.href = 'dashboard.html';
+                // Make sure to use the full path to dashboard
+                window.location.href = '/Employer_Side/dashboard.html';
             }
             
         } catch (authError) {

@@ -1,47 +1,58 @@
-import { db } from './auth.js';
-import { 
-    collection, 
-    query, 
-    where, 
-    getDocs, 
-    orderBy 
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import { db, auth, initializeFirebase } from './auth.js';
 
+
+// Initialize Firebase first
+initializeFirebase().then(() => {
+    console.log('Firebase initialized in newJobs.js');
+    // Call displayRecentJobs after Firebase is initialized
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', displayRecentJobs);
+    } else {
+        displayRecentJobs();
+    }
+}).catch(error => {
+    console.error("Error initializing Firebase in newJobs:", error);
+});
 
 async function displayRecentJobs() {
     try {
+        // Make sure Firebase is initialized
+        if (!auth.currentUser) {
+            console.log('Waiting for authentication...');
+            return;
+        }
+
         // Calculate date 7 days ago
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         
         console.log('Fetching jobs after:', sevenDaysAgo); // Debug log
 
-        // Query for jobs
-        const jobsRef = collection(db, "jobs");
-        const jobsQuery = query(
-            jobsRef,
-            where("timestamp", ">=", sevenDaysAgo),
-            orderBy("timestamp", "desc")
-        );
-
-        const querySnapshot = await getDocs(jobsQuery);
-        const recentJobs = [];
-
-        console.log('Found recent jobs uploaded within 7 days:', querySnapshot.size); // Debug log
-
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
-            console.log('Job data:', data); // Debug log
-            recentJobs.push({
-                title: data.title || 'Untitled Position',
-                company: data.company || 'N/A',
-                type: data.type || 'Full Time',
-                location: data.location || 'N/A',
-                timestamp: data.timestamp,
-                lastEdited: data.lastEdited || null,
-                employerId: data.employerId
-            });
+        // Use the server endpoint to get jobs
+        const response = await fetch('/api/employer/jobs/' + await getCurrentEmployerId(), {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
         });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch jobs: ${response.statusText}`);
+        }
+        
+        const jobs = await response.json();
+        const recentJobs = jobs.filter(job => {
+            const timestamp = job.timestamp?.toDate?.() || new Date(job.timestamp);
+            return timestamp >= sevenDaysAgo;
+        }).sort((a, b) => {
+            const dateA = a.timestamp?.toDate?.() || new Date(a.timestamp);
+            const dateB = b.timestamp?.toDate?.() || new Date(b.timestamp);
+            return dateB - dateA; // Sort in descending order (newest first)
+        });
+
+        console.log('Found recent jobs uploaded within 7 days:', recentJobs.length); // Debug log
+        
+        // We've already processed the jobs data in the filter/sort above
+        // No need to iterate through querySnapshot anymore
 
         // Get and style the container
         const chartArea = document.querySelector('#recentJobsArea');
@@ -221,8 +232,28 @@ async function displayRecentJobs() {
     }
 }
 
-// Initialize when the page loads
-document.addEventListener('DOMContentLoaded', displayRecentJobs);
+// We're now initializing in the initializeFirebase().then() call above
+
+// Helper function to get current employer ID
+async function getCurrentEmployerId() {
+    try {
+        const response = await fetch('/api/employer/current-id', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to get employer ID: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        return data.employerId;
+    } catch (error) {
+        console.error("Error getting employer ID:", error);
+        return null;
+    }
+}
 
 // Add these helper functions at the end of your file
 function formatTimeAgo(timestamp) {

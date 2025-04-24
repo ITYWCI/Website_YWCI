@@ -8,19 +8,6 @@ import {
     getInitials, 
     createInitialsAvatar 
 } from './utils.js';
-import { 
-    collection, 
-    query, 
-    where, 
-    getDocs,
-    doc,
-    updateDoc
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-import {
-    EmailAuthProvider,
-    reauthenticateWithCredential,
-    updatePassword
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
 function hideLoader() {
     const loader = document.getElementById('loadingOverlay');
@@ -77,16 +64,19 @@ function formatFullName(firstName, middleName, lastName) {
 // Function to get employer data
 async function getEmployerData(email) {
     try {
-        const employersRef = collection(db, "employers");
-        const q = query(employersRef, where("email", "==", email.toLowerCase()));
-        const querySnapshot = await getDocs(q);
+        // Use the server endpoint to get the employer profile
+        const response = await fetch('/api/employer/profile', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
         
-        if (!querySnapshot.empty) {
-            const userData = querySnapshot.docs[0].data();
-            userData.id = querySnapshot.docs[0].id; // Save document ID for updates
-            return userData;
+        if (!response.ok) {
+            throw new Error(`Failed to fetch employer data: ${response.statusText}`);
         }
-        return null;
+        
+        const userData = await response.json();
+        return userData;
     } catch (error) {
         console.error("Error fetching employer data:", error);
         return null;
@@ -168,31 +158,36 @@ async function saveProfileChanges(e) {
         const user = auth.currentUser;
         
         if (user) {
-            const employersRef = collection(db, "employers");
-            const q = query(employersRef, where("email", "==", user.email));
-            const querySnapshot = await getDocs(q);
+            // Use the server endpoint to update the employer profile
+            const response = await fetch('/api/employer/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${await user.getIdToken()}`
+                },
+                body: JSON.stringify(userData)
+            });
             
-            if (!querySnapshot.empty) {
-                const employerDoc = querySnapshot.docs[0];
-                await updateDoc(doc(db, "employers", employerDoc.id), userData);
-                
-                // Show success message with SweetAlert2
-                if (typeof Swal !== 'undefined') {
-                    await Swal.fire({
-                        title: 'Success',
-                        text: 'Profile is updated',
-                        icon: 'success',
-                        confirmButtonColor: '#3085d6',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false
-                    });
-                } else {
-                    alert('Profile is updated');
-                }
-                
-                // Refresh the page to show updated data
-                window.location.reload();
+            if (!response.ok) {
+                throw new Error(`Failed to update profile: ${response.statusText}`);
             }
+            
+            // Show success message with SweetAlert2
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire({
+                    title: 'Success',
+                    text: 'Profile is updated',
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+            } else {
+                alert('Profile is updated');
+            }
+            
+            // Refresh the page to show updated data
+            window.location.reload();
         }
     } catch (error) {
         console.error("Error updating profile:", error);
@@ -323,108 +318,110 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Function to handle password change
-async function handlePasswordChange() {
+async function handlePasswordChange(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Validate passwords
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        if (typeof Swal !== 'undefined') {
+            await Swal.fire({
+                title: 'Required Fields',
+                text: 'All password fields are required.',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6'
+            });
+        } else {
+            alert('All password fields are required.');
+        }
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        if (typeof Swal !== 'undefined') {
+            await Swal.fire({
+                title: 'Password Mismatch',
+                text: 'New password and confirm password do not match.',
+                icon: 'error',
+                confirmButtonColor: '#3085d6'
+            });
+        } else {
+            alert('New password and confirm password do not match.');
+        }
+        return;
+    }
+    
     try {
-        const oldPassword = document.getElementById('oldPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        // Validate passwords
-        if (newPassword !== confirmPassword) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'New passwords do not match!'
-            });
-            return;
-        }
-
-        if (newPassword.length < 6) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'New password must be at least 6 characters long!'
-            });
-            return;
-        }
-
         const user = auth.currentUser;
-        if (!user) {
-            throw new Error('No user is currently signed in');
-        }
-
-        // Create credentials with old password
-        const credential = EmailAuthProvider.credential(
-            user.email,
-            oldPassword
-        );
-
-        // Reauthenticate user first to verify current password
-        await reauthenticateWithCredential(user, credential);
         
-        // Show confirmation dialog before changing password
-        const result = await Swal.fire({
-            title: 'Confirm Password Change',
-            text: 'Are you sure you want to change your password?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#073884',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, change it!',
-            cancelButtonText: 'Cancel'
-        });
-        
-        // If user confirms, proceed with password change
-        if (result.isConfirmed) {
-            // Update password
+        if (user) {
+            // We need to use the Firebase Auth SDK directly for password changes
+            // First, dynamically import the required Firebase auth modules
+            const { EmailAuthProvider, reauthenticateWithCredential, updatePassword } = 
+                await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js");
+            
+            // Reauthenticate user before changing password
+            const credential = EmailAuthProvider.credential(
+                user.email,
+                currentPassword
+            );
+            
+            await reauthenticateWithCredential(user, credential);
+            
+            // Change password
             await updatePassword(user, newPassword);
-
+            
             // Show success message
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: 'Password updated successfully!'
-            });
-
-            // Close modal
-            $('#changePasswordModal').modal('hide');
-
-            // Clear form
-            document.getElementById('changePasswordForm').reset();
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire({
+                    title: 'Success',
+                    text: 'Password has been updated successfully.',
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6'
+                });
+            } else {
+                alert('Password has been updated successfully.');
+            }
+            
+            // Clear password fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            
+            // Hide validation messages
+            document.getElementById('passwordMatch').style.display = 'none';
+            document.getElementById('passwordStrength').style.display = 'none';
         }
-        // If canceled, do nothing and keep the modal open
-
     } catch (error) {
-        console.error('Error changing password:', error);
+        console.error("Error changing password:", error);
+        
         let errorMessage = 'Failed to change password. Please try again.';
         
-        // Map Firebase error codes to user-friendly messages
-        switch (error.code) {
-            case 'auth/wrong-password':
-            case 'auth/invalid-login-credentials':
-                errorMessage = 'Current password is incorrect.';
-                break;
-            case 'auth/weak-password':
-                errorMessage = 'New password is too weak. Please use at least 6 characters.';
-                break;
-            case 'auth/requires-recent-login':
-                errorMessage = 'For security reasons, please log out and log back in before changing your password.';
-                break;
-            case 'auth/network-request-failed':
-                errorMessage = 'Network error. Please check your internet connection.';
-                break;
-            case 'auth/too-many-requests':
-                errorMessage = 'Too many attempts. Please try again later.';
-                break;
-            default:
-                errorMessage = 'An error occurred while changing password. Please try again.';
+        // Handle specific error cases
+        if (error.code === 'auth/wrong-password') {
+            errorMessage = 'Current password is incorrect.';
+        } else if (error.code === 'auth/weak-password') {
+            errorMessage = 'New password is too weak. Please use a stronger password.';
+        } else if (error.code === 'auth/requires-recent-login') {
+            errorMessage = 'This operation requires recent authentication. Please log in again before retrying.';
+            // Redirect to login page after a short delay
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
         }
-
-        Swal.fire({
-            icon: 'error',
-            title: 'Password Change Failed',
-            text: errorMessage,
-            confirmButtonColor: '#3085d6'
-        });
+        
+        if (typeof Swal !== 'undefined') {
+            await Swal.fire({
+                title: 'Error',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonColor: '#3085d6'
+            });
+        } else {
+            alert(errorMessage);
+        }
     }
-}
+}   

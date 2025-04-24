@@ -1,32 +1,30 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { 
-    getAuth, 
-    onAuthStateChanged,
-    signOut 
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import {
-    getFirestore,
-    collection,
-    query,
-    where,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+// Import Firebase modules from server-provided SDK
+let auth;
+let db;
 
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyBL-HNBhP3mkb4Bp2BUDy4FbJl3M15MxSY",
-    authDomain: "ywci-website.firebaseapp.com",
-    projectId: "ywci-website",
-    storageBucket: "ywci-website.firebasestorage.app",
-    messagingSenderId: "718233699603",
-    appId: "1:718233699603:web:fca95cafc62593fc04c6e6",
-    measurementId: "G-3JJ5BD37DG"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Function to initialize Firebase from server
+async function initializeFirebase() {
+    try {
+        const response = await fetch('/api/firebase-sdk');
+        const data = await response.json();
+        
+        // Dynamically import Firebase modules
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js");
+        const { getAuth, onAuthStateChanged, signOut } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js");
+        const { getFirestore } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js");
+        
+        // Initialize Firebase with config from server
+        const app = initializeApp(data.config);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        
+        console.log('Firebase initialized from server config');
+        return { auth, db };
+    } catch (error) {
+        console.error('Error initializing Firebase:', error);
+        throw error;
+    }
+}
 
 //Function to save the last visited URL
 function saveLastVisitedUrl() {
@@ -39,33 +37,58 @@ function saveLastVisitedUrl() {
 }
 
 //Check auth state
-function checkAuth() {
-    return new Promise((resolve, reject) => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            unsubscribe();
-            if (!user && !window.location.pathname.includes('login.html')) {
-                // Save the current URL before redirecting to login
-                saveLastVisitedUrl();
-                window.location.href = 'login.html';
-                reject('No user logged in');
-            }
-            resolve(user);
-        }, reject);
-    });
+async function checkAuth() {
+    try {
+        // Make sure Firebase auth is initialized
+        if (!auth) {
+            await initializeFirebase();
+        }
+        
+        // Dynamically import the auth functions we need
+        const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js");
+        
+        return new Promise((resolve, reject) => {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                unsubscribe();
+                if (!user && !window.location.pathname.includes('login.html')) {
+                    // Save the current URL before redirecting to login
+                    saveLastVisitedUrl();
+                    window.location.href = '/Employer_Side/login.html';
+                    reject('No user logged in');
+                }
+                resolve(user);
+            }, reject);
+        });
+    } catch (error) {
+        console.error("Error in checkAuth:", error);
+        if (!window.location.pathname.includes('login.html')) {
+            window.location.href = '/Employer_Side/login.html';
+        }
+        throw error;
+    }
 }
 
 // Get employer data
 async function getEmployerData(email) {
     try {
-        const employersRef = collection(db, "employers");
-        const q = query(employersRef, where("email", "==", email.toLowerCase()));
-        const querySnapshot = await getDocs(q);
-        
-        if (!querySnapshot.empty) {
-            return querySnapshot.docs[0].data();
+        // Make sure Firebase is initialized
+        if (!auth || !db) {
+            await initializeFirebase();
         }
-        console.log("No user data found for email:", email);
-        return null;
+        
+        // Use the server endpoint to get employer profile
+        const response = await fetch('/api/employer/profile', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch employer data: ${response.statusText}`);
+        }
+        
+        const userData = await response.json();
+        return userData;
     } catch (error) {
         console.error("Error fetching employer data:", error);
         return null;
@@ -87,8 +110,11 @@ function populateDashboardUser(userData) {
 // Handle logout
 async function handleLogout() {
     try {
+        // Dynamically import the auth functions we need
+        const { signOut } = await import("https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js");
+        
         await signOut(auth);
-        window.location.href = 'login.html';
+        window.location.href = '/Employer_Side/login.html';
     } catch (error) {
         console.error("Error signing out:", error);
         alert('Error signing out. Please try again.');
@@ -98,7 +124,12 @@ async function handleLogout() {
 // Initialize page with auth check
 async function initializePage(pageSpecificInit) {
     try {
-        // Check authentication first
+        // Initialize Firebase first
+        if (!auth || !db) {
+            await initializeFirebase();
+        }
+        
+        // Check authentication
         const user = await checkAuth();
         if (!user) return;
 
@@ -116,7 +147,7 @@ async function initializePage(pageSpecificInit) {
     } catch (error) {
         console.error("Error initializing page:", error);
         if (!window.location.pathname.includes('login.html')) {
-            window.location.href = 'login.html';
+            window.location.href = '/Employer_Side/login.html';
         }
     }
 }
@@ -142,6 +173,11 @@ window.addEventListener('beforeunload', function() {
     }
 });
 
+// Initialize Firebase when this module is imported
+initializeFirebase().catch(error => {
+    console.error('Failed to initialize Firebase on module import:', error);
+});
+
 export { 
     initializePage, 
     handleLogout, 
@@ -150,5 +186,6 @@ export {
     checkAuth, 
     getEmployerData, 
     populateDashboardUser,
-    saveLastVisitedUrl
+    saveLastVisitedUrl,
+    initializeFirebase
 };

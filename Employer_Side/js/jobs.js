@@ -25,38 +25,43 @@ import {
 let currentEmployerId = null;
 
 async function getCurrentEmployerId() {
-try {
-    // Wait for auth state to be ready
-    await new Promise((resolve) => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            unsubscribe(); // Stop listening immediately
-            resolve(user);
-        });
-    });
+    try {
+        // Wait for auth to be initialized (retry for up to 2 seconds)
+        let retries = 20;
+        while (typeof auth === 'undefined' && retries > 0) {
+            await new Promise(res => setTimeout(res, 100));
+            retries--;
+        }
+        if (typeof auth === 'undefined') throw new Error('Auth not initialized');
 
-    const user = auth.currentUser;
-    if (!user) {
-        console.log("No user currently logged in");
+        // Wait for user to be available
+        const user = await new Promise((resolve, reject) => {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                unsubscribe();
+                resolve(user);
+            }, reject);
+        });
+        if (!user) {
+            throw new Error('No authenticated user');
+        }
+
+        const response = await fetch('/api/employer/current-id', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${await user.getIdToken()}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.employerId;
+    } catch (error) {
+        console.error("Error getting employer ID:", error);
         return null;
     }
-
-    console.log("Current user email:", user.email); // Debug log
-
-    const employersRef = collection(db, "employers");
-    const q = query(employersRef, where("email", "==", user.email.toLowerCase()));
-    const querySnapshot = await getDocs(q);
-    
-    if (!querySnapshot.empty) {
-        const employerId = querySnapshot.docs[0].data().employerId;
-        console.log("Found employer ID:", employerId); // Debug log
-        return employerId;
-    }
-    console.log("No employer found for email:", user.email); // Debug log
-    return null;
-} catch (error) {
-    console.error("Error getting employer ID:", error);
-    return null;
-}
 }
 
 function hideLoader() {
@@ -1242,29 +1247,34 @@ if (deleteButton) {
 
             if (typeof Swal !== 'undefined') {
                 const result = await Swal.fire({
-                    title: 'Delete Job Posting',
-                    text: 'Are you sure you want to delete this job posting?',
+                    title: 'Archive Job Posting',
+                    text: 'Are you sure you want to archive this job posting? You can restore it later from the archives.',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#073884',
-                    confirmButtonText: 'Yes, delete it!',
+                    confirmButtonColor: '#073884',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, archive it!',
                     cancelButtonText: 'Cancel',
                     allowOutsideClick: false,
                     allowEscapeKey: false
                 });
                 confirmed = result.isConfirmed;
             } else {
-                confirmed = window.confirm('Are you sure you want to delete this job posting?');
+                confirmed = window.confirm('Are you sure you want to archive this job posting? You can restore it later from the archives.');
             }
 
             if (confirmed && currentJobData) {
-                // Update the document in Firestore to mark as archived
-                const jobRef = doc(db, "jobs", currentJobData.id);
-                await updateDoc(jobRef, {
-                    archived: true,
-                    archivedDate: new Date().toISOString() // Optional: track when it was archived
+                // Call the server endpoint to archive the job
+                const response = await fetch(`/api/employer/jobs/${currentJobData.id}/archive`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+                    }
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 // Show success message
                 if (typeof Swal !== 'undefined') {
@@ -1284,6 +1294,7 @@ if (deleteButton) {
                 closeModal(viewJobModal);
                 window.location.reload();
             }
+            
         } catch (error) {
             console.error("Error archiving job: ", error);
             if (typeof Swal !== 'undefined') {
@@ -1815,20 +1826,6 @@ uploadButton.addEventListener('click', async function(e) {
     e.preventDefault();
 
     try {
-        // Get current employer ID first
-        currentEmployerId = await getCurrentEmployerId();
-        if (!currentEmployerId) {
-            await Swal.fire({
-                title: 'Error!',
-                text: 'Could not verify employer account.',
-                icon: 'error',
-                confirmButtonColor: '#073884',
-                allowOutsideClick: false,
-                allowEscapeKey: false
-            });
-            return;
-        }
-
         // Get form values
         const jobTitle = document.getElementById('jobTitle').value;
         const company = document.getElementById('company').value;
@@ -3318,60 +3315,127 @@ if (archivesButton && archivesModal) {
 }
 });
 
-async function fetchAndRenderJobs() {
-try {
-    const currentEmployerId = await getCurrentEmployerId();
-    if (!currentEmployerId) {
-        console.error("No employer ID found");
-        return;
-    }
+// Function to render filtered jobs
+function renderFilteredJobs() {
+    const jobCards = document.querySelectorAll('.job-card');
+    const searchInput = document.getElementById('searchInput');
+    const locationFilter = document.getElementById('locationFilter');
+    const jobTypeFilter = document.getElementById('jobTypeFilter');
 
-    console.log("Loading jobs for employerId:", currentEmployerId);
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    const selectedLocation = locationFilter ? locationFilter.value : '';
+    const selectedJobType = jobTypeFilter ? jobTypeFilter.value : '';
 
-    // Query jobs for this specific employer
-    const jobsRef = collection(db, "jobs");
-    const q = query(
-        jobsRef, 
-        where("employerId", "==", currentEmployerId),
-        where("archived", "==", false)
-    );
-    
-    const querySnapshot = await getDocs(q);
-    const jobs = []; // Define the jobs array here
-    
-    querySnapshot.forEach((doc) => {
-        const jobData = { id: doc.id, ...doc.data() };
-        jobs.push(jobData);
+    let visibleJobs = 0;
+
+    jobCards.forEach(card => {
+        const title = card.querySelector('.job-title').textContent.toLowerCase();
+        const location = card.querySelector('.job-location').textContent.toLowerCase();
+        const type = card.querySelector('.job-type').textContent.toLowerCase();
+
+        const matchesSearch = !searchTerm || title.includes(searchTerm);
+        const matchesLocation = !selectedLocation || location.includes(selectedLocation.toLowerCase());
+        const matchesJobType = !selectedJobType || type === selectedJobType.toLowerCase();
+
+        if (matchesSearch && matchesLocation && matchesJobType) {
+            card.style.display = '';
+            visibleJobs++;
+        } else {
+            card.style.display = 'none';
+        }
     });
 
-    // Get the noDataFound element
-    const noDataFound = document.getElementById('noDataFound');
-
-    // Simply toggle visibility based on jobs length
-    if (noDataFound) {
-        noDataFound.style.display = jobs.length === 0 ? 'block' : 'none';
+    // Show/hide no results message
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    if (noResultsMessage) {
+        noResultsMessage.style.display = visibleJobs === 0 ? 'block' : 'none';
     }
 
-    // Continue with your existing job rendering logic
-    window.allJobs = jobs;
-    
-    if (jobs.length > 0) {
-        // Only populate filters and render jobs if we have jobs
-        const locations = new Set();
-        const jobTypes = new Set();
-        
-        jobs.forEach(job => {
-            if (job.location) locations.add(job.location);
-            if (job.type) jobTypes.add(job.type);
-        });
-        
-        populateFilterDropdowns(locations, jobTypes);
-        renderFilteredJobs();
-    }
-
-} catch (error) {
-    console.error("Error fetching jobs:", error);
+    // Update pagination
+    setupPagination();
 }
+
+// Function to populate filter dropdowns
+function populateFilterDropdowns(locations, jobTypes) {
+    const locationFilter = document.getElementById('locationFilter');
+    const jobTypeFilter = document.getElementById('jobTypeFilter');
+
+    if (locationFilter) {
+        // Clear existing options except the first one
+        while (locationFilter.options.length > 1) {
+            locationFilter.remove(1);
+        }
+
+        // Add new location options
+        Array.from(locations).sort().forEach(location => {
+            const option = new Option(location, location);
+            locationFilter.add(option);
+        });
+    }
+
+    if (jobTypeFilter) {
+        // Clear existing options except the first one
+        while (jobTypeFilter.options.length > 1) {
+            jobTypeFilter.remove(1);
+        }
+
+        // Add new job type options
+        Array.from(jobTypes).sort().forEach(type => {
+            const option = new Option(type, type);
+            jobTypeFilter.add(option);
+        });
+    }
+}
+
+async function fetchAndRenderJobs() {
+    try {
+        const response = await fetch('/api/employer/jobs', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const jobs = await response.json();
+
+        // Get the noDataFound element
+        const noDataFound = document.getElementById('noDataFound');
+
+        // Simply toggle visibility based on jobs length
+        if (noDataFound) {
+            noDataFound.style.display = jobs.length === 0 ? 'block' : 'none';
+        }
+
+        // Continue with your existing job rendering logic
+        window.allJobs = jobs;
+        
+        if (jobs.length > 0) {
+            // Only populate filters and render jobs if we have jobs
+            const locations = new Set();
+            const jobTypes = new Set();
+            
+            jobs.forEach(job => {
+                if (job.location) locations.add(job.location);
+                if (job.type) jobTypes.add(job.type);
+            });
+            
+            populateFilterDropdowns(locations, jobTypes);
+            renderFilteredJobs();
+        }
+
+    } catch (error) {
+        console.error("Error fetching jobs:", error);
+        Swal.fire({
+            title: 'Error!',
+            text: 'Failed to fetch jobs. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#073884'
+        });
+    }
 }
 
 // Add this function to handle date formatting

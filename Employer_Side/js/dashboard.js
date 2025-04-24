@@ -1,23 +1,9 @@
 import {
     initializePage,
-    db } from './auth.js';
+    db,
+    auth,
+    initializeFirebase } from './auth.js';
 import { getInitials, createInitialsAvatar, populateUserNav } from './utils.js';
-
-import { 
-    getAuth, 
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { 
-    getFirestore, 
-    collection, 
-    query,
-    where,
-    getDocs 
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-
-// Initialize Firebase Auth
-const auth = getAuth();
 
 function hideLoader() {
     const loader = document.getElementById('loadingOverlay');
@@ -30,23 +16,30 @@ async function initializeDashboard() {
     try {
         // Wait for all data loading functions to complete
         await Promise.all([
+            populateUserNav(),
             getTotalApplications(),
             getActiveJobs(),
             countHiredApplicants(),
             countPendingApplications()
-            // Add any other async operations here
         ]);
         
-        // Hide loader after all data is loaded
+        // Hide loader after everything is loaded
         hideLoader();
     } catch (error) {
         console.error("Error initializing dashboard:", error);
-        hideLoader(); // Hide loader even if there's an error
+        hideLoader(); // Hide loader even on error
     }
 }
 
-// Update the auth state change handler
-onAuthStateChanged(auth, async (user) => {
+// Initialize Firebase first, then set up auth state handler
+initializeFirebase().then(() => {
+    console.log('Firebase initialized in dashboard.js');
+}).catch(error => {
+    console.error("Error initializing Firebase in dashboard:", error);
+});
+
+// Function to handle user authentication
+async function handleUserAuth(user) {
     if (user) {
         try {
             const userData = await getEmployerData(user.email);
@@ -68,21 +61,24 @@ onAuthStateChanged(auth, async (user) => {
             window.location.href = 'login.html';
         }
     }
-});
+}
 
 // Function to get employer data
 async function getEmployerData(email) {
     try {
-        const employersRef = collection(db, "employers");
-        const q = query(employersRef, where("email", "==", email.toLowerCase()));
-        const querySnapshot = await getDocs(q);
+        // Use the server endpoint to get the employer profile
+        const response = await fetch('/api/employer/profile', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
         
-        if (!querySnapshot.empty) {
-            const userData = querySnapshot.docs[0].data();
-            return userData;
+        if (!response.ok) {
+            throw new Error(`Failed to fetch employer data: ${response.statusText}`);
         }
-        console.log("No user data found for email:", email);
-        return null;
+        
+        const userData = await response.json();
+        return userData;
     } catch (error) {
         console.error("Error fetching employer data:", error);
         return null;
@@ -112,9 +108,26 @@ function populateDashboardUser(userData) {
 // Function to get total applications
 async function getTotalApplications() {
     try {
-        const applicationsRef = collection(db, "applications");
-        const querySnapshot = await getDocs(applicationsRef);
-        const totalApplications = querySnapshot.size;
+        // Make sure auth is initialized
+        if (!auth || !auth.currentUser) {
+            console.log("Waiting for authentication in getTotalApplications...");
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a bit and try again
+            return getTotalApplications();
+        }
+        
+        // Use the server endpoint to get applications
+        const response = await fetch('/api/applicants', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch applications: ${response.statusText}`);
+        }
+        
+        const applications = await response.json();
+        const totalApplications = applications.length;
         
         const totalApplicationsElement = document.getElementById('totalApplications');
         if (totalApplicationsElement) {
@@ -132,9 +145,32 @@ async function getTotalApplications() {
 // Function to get total active jobs
 async function getActiveJobs() {
     try {
-        const jobsRef = collection(db, "jobs");
-        const querySnapshot = await getDocs(jobsRef);
-        const totalJobs = querySnapshot.size;
+        // Make sure auth is initialized
+        if (!auth || !auth.currentUser) {
+            console.log("Waiting for authentication in getActiveJobs...");
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a bit and try again
+            return getActiveJobs();
+        }
+        
+        // Get current employer ID
+        const employerId = await getCurrentEmployerId();
+        if (!employerId) {
+            throw new Error('No employer ID found');
+        }
+        
+        // Use the server endpoint to get jobs
+        const response = await fetch(`/api/employer/jobs/${employerId}`, {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch jobs: ${response.statusText}`);
+        }
+        
+        const jobs = await response.json();
+        const totalJobs = jobs.length;
         
         const activeJobsElement = document.getElementById('activeJobs');
         if (activeJobsElement) {
@@ -152,12 +188,28 @@ async function getActiveJobs() {
 // Function to count hired applicants
 async function countHiredApplicants() {
     try {
-        const applicationsRef = collection(db, "applications");
-        const querySnapshot = await getDocs(applicationsRef);
+        // Make sure auth is initialized
+        if (!auth || !auth.currentUser) {
+            console.log("Waiting for authentication in countHiredApplicants...");
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a bit and try again
+            return countHiredApplicants();
+        }
+        
+        // Use the server endpoint to get applications
+        const response = await fetch('/api/applicants', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch applications: ${response.statusText}`);
+        }
+        
+        const applications = await response.json();
         let hiredCount = 0;
 
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
+        applications.forEach((data) => {
             if (data.status === 'hired') {
                 hiredCount++;
             }
@@ -176,13 +228,29 @@ async function countHiredApplicants() {
 // Function to count pending applications
 async function countPendingApplications() {
     try {
-        const applicationsRef = collection(db, "applications");
-        const querySnapshot = await getDocs(applicationsRef);
+        // Make sure auth is initialized
+        if (!auth || !auth.currentUser) {
+            console.log("Waiting for authentication in countPendingApplications...");
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a bit and try again
+            return countPendingApplications();
+        }
+        
+        // Use the server endpoint to get applications
+        const response = await fetch('/api/applicants', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch applications: ${response.statusText}`);
+        }
+        
+        const applications = await response.json();
         let pendingCount = 0;
 
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            if (data.status === 'application received' || data.status === 'viewed') {
+        applications.forEach((data) => {
+            if (data.status === 'pending') {
                 pendingCount++;
             }
         });
@@ -197,7 +265,33 @@ async function countPendingApplications() {
     }
 }
 
+// Helper function to get current employer ID
+async function getCurrentEmployerId() {
+    try {
+        const response = await fetch('/api/employer/current-id', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to get employer ID: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        return data.employerId;
+    } catch (error) {
+        console.error("Error getting employer ID:", error);
+        return null;
+    }
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    initializePage(initializeDashboard);
+    initializePage(() => {
+        // This will be called after Firebase and auth are initialized
+        if (auth.currentUser) {
+            handleUserAuth(auth.currentUser);
+        }
+    });
 });

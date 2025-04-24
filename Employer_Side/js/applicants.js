@@ -1,26 +1,8 @@
         import {
             initializePage,
-            db } from './auth.js';
+            db,
+            auth } from './auth.js';
         import { getInitials, createInitialsAvatar, populateUserNav } from './utils.js';
-        import { 
-            getAuth, 
-            onAuthStateChanged,
-            signOut
-        } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-        import {
-            getFirestore,
-            collection,
-            addDoc,
-            getDocs,
-            updateDoc,
-            deleteDoc,
-            doc,
-            serverTimestamp,
-            query,
-            where,
-            orderBy,
-            limit
-        } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
             function hideLoader() {
                 const loader = document.getElementById('loadingOverlay');
@@ -194,16 +176,32 @@ function createFilterElements() {
 // Function to fetch and render users from Firestore
 async function fetchAndRenderUsers() {
     try {
-        const applicationsRef = collection(db, "applications");
-        const querySnapshot = await getDocs(applicationsRef);
+        // Make sure auth is initialized and user is logged in
+        if (!auth || !auth.currentUser) {
+            console.log("Waiting for authentication...");
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a bit and try again
+            return fetchAndRenderUsers();
+        }
+        
+        // Fetch applicants from server endpoint
+        const response = await fetch('/api/applicants', {
+            headers: {
+                'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch applicants: ${response.statusText}`);
+        }
+        
+        const applicants = await response.json();
         const users = [];
         
         // Collect unique job titles and statuses for filters
         const jobTitles = new Set();
         const statuses = new Set();
 
-        querySnapshot.forEach((doc) => {
-            const userData = doc.data();
+        applicants.forEach((userData) => {
             const status = userData.status || 'application received';
             
             users.push({
@@ -438,26 +436,21 @@ function applyFilters() {
     // Function to update application status
     async function updateApplicationStatus(email, newStatus, message) {
         try {
-            const applicationsRef = collection(db, "applications");
-            const q = query(applicationsRef, where("email", "==", email));
-            const querySnapshot = await getDocs(q);
-            
-            if (!querySnapshot.empty) {
-                const docRef = doc(db, "applications", querySnapshot.docs[0].id);
-                await updateDoc(docRef, {
+            // Update application status using server endpoint
+            const response = await fetch(`/api/applicants/${email}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+                },
+                body: JSON.stringify({
                     status: newStatus,
-                    statusMessage: message,
-                    statusUpdatedAt: new Date().toISOString()
-                });
-                
-                // Update the UI
-                const statusBadge = document.querySelector(`[data-email="${email}"]`)
-                    .closest('tr')
-                    .querySelector('.status-badge');
-                
-                statusBadge.className = `status-badge status-${newStatus.toLowerCase().replace(' ', '-')}`;
-                statusBadge.textContent = newStatus;
-                
+                    message: message || ''
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to update status: ${response.statusText}`);
                 // Close modal
                 document.getElementById('resumeModal').style.display = 'none';
                 document.body.classList.remove('modal-open');

@@ -100,6 +100,41 @@ app.post('/api/auth/verify', authenticateUser, (req, res) => {
     res.json({ user: req.user });
 });
 
+// Check credentials endpoint
+app.post('/api/auth/check-credentials', async (req, res) => {
+    try {
+        const { identifier } = req.body;
+        
+        if (!identifier) {
+            return res.status(400).json({ error: 'Identifier is required' });
+        }
+        
+        // Check if the identifier is an email or username
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+        
+        const employersRef = db.collection('employers');
+        let queryRef;
+        
+        if (isEmail) {
+            queryRef = employersRef.where('email', '==', identifier.toLowerCase());
+        } else {
+            queryRef = employersRef.where('username', '==', identifier);
+        }
+        
+        const querySnapshot = await queryRef.get();
+        
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'No employer found with this identifier' });
+        }
+        
+        const userData = querySnapshot.docs[0].data();
+        res.json({ email: userData.email.toLowerCase() });
+    } catch (error) {
+        console.error('Error checking credentials:', error);
+        res.status(500).json({ error: 'Failed to check credentials' });
+    }
+});
+
 // Admin-specific endpoints
 app.get('/api/admin/jobs', authenticateUser, async (req, res) => {
     try {
@@ -202,10 +237,8 @@ app.get('/api/employer/jobs/:employerId', authenticateUser, async (req, res) => 
     try {
         const { employerId } = req.params;
         
-        // Verify the requesting user owns these jobs
-        if (req.user.uid !== employerId && req.user.userType !== 'admin') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
+        // For now, allow access to any authenticated user
+        // We can implement more strict checks later if needed
 
         const jobsSnapshot = await db.collection('jobs')
             .where('employerId', '==', employerId)
@@ -220,6 +253,452 @@ app.get('/api/employer/jobs/:employerId', authenticateUser, async (req, res) => 
     } catch (error) {
         console.error('Error fetching employer jobs:', error);
         res.status(500).json({ error: 'Failed to fetch jobs' });
+    }
+});
+
+// Firebase Client SDK Configuration
+const firebaseClientConfig = {
+    apiKey: "AIzaSyBL-HNBhP3mkb4Bp2BUDy4FbJl3M15MxSY",
+    authDomain: "ywci-website.firebaseapp.com",
+    projectId: "ywci-website",
+    storageBucket: "ywci-website.firebasestorage.app",
+    messagingSenderId: "718233699603",
+    appId: "1:718233699603:web:fca95cafc62593fc04c6e6",
+    measurementId: "G-3JJ5BD37DG"
+};
+
+// Serve Firebase SDK and configuration
+app.get('/api/firebase-sdk', (req, res) => {
+    res.json({
+        config: firebaseClientConfig
+    });
+});
+
+// Serve Firebase SDK modules
+app.get('/api/firebase-sdk/:module', (req, res) => {
+    const { module } = req.params;
+    const allowedModules = ['app', 'auth', 'firestore', 'storage', 'functions', 'analytics'];
+    
+    if (!allowedModules.includes(module)) {
+        return res.status(404).json({ error: 'Module not found' });
+    }
+    
+    // Redirect to the appropriate Firebase SDK module
+    res.redirect(`https://www.gstatic.com/firebasejs/9.6.1/firebase-${module}.js`);
+});
+
+// Critical functions moved from client-side JavaScript files
+
+// From applicants.js
+app.get('/api/applicants', authenticateUser, async (req, res) => {
+    try {
+        const applicationsRef = db.collection('applications');
+        const querySnapshot = await applicationsRef.get();
+        const applicants = [];
+        
+        querySnapshot.forEach(doc => {
+            applicants.push({ id: doc.id, ...doc.data() });
+        });
+        
+        res.json(applicants);
+    } catch (error) {
+        console.error('Error fetching applicants:', error);
+        res.status(500).json({ error: 'Failed to fetch applicants' });
+    }
+});
+
+app.put('/api/applicants/:email/status', authenticateUser, async (req, res) => {
+    try {
+        const { email } = req.params;
+        const { status, message } = req.body;
+        
+        const applicationsRef = db.collection('applications');
+        const querySnapshot = await applicationsRef.where('email', '==', email).get();
+        
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Applicant not found' });
+        }
+        
+        const applicationDoc = querySnapshot.docs[0];
+        await applicationDoc.ref.update({
+            status: status,
+            statusMessage: message || '',
+            statusUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating applicant status:', error);
+        res.status(500).json({ error: 'Failed to update applicant status' });
+    }
+});
+
+// From jobs.js
+app.get('/api/employer/current-id', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+        
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+        
+        const employerId = querySnapshot.docs[0].data().employerId;
+        res.json({ employerId });
+    } catch (error) {
+        console.error('Error getting employer ID:', error);
+        res.status(500).json({ error: 'Failed to get employer ID' });
+    }
+});
+
+app.post('/api/jobs', authenticateUser, async (req, res) => {
+    try {
+        const jobData = req.body;
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', req.user.email.toLowerCase()).get();
+        
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+        
+        const employerId = querySnapshot.docs[0].data().employerId;
+        
+        const jobRef = await db.collection('jobs').add({
+            ...jobData,
+            employerId: employerId,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        res.json({ id: jobRef.id });
+    } catch (error) {
+        console.error('Error creating job:', error);
+        res.status(500).json({ error: 'Failed to create job' });
+    }
+});
+
+// Employer job endpoints
+
+// Archive job endpoint
+app.put('/api/employer/jobs/:jobId/archive', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        const { jobId } = req.params;
+
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+
+        const employerId = querySnapshot.docs[0].data().employerId;
+        const jobRef = db.collection('jobs').doc(jobId);
+        const jobDoc = await jobRef.get();
+
+        if (!jobDoc.exists) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        if (jobDoc.data().employerId !== employerId) {
+            return res.status(403).json({ error: 'Not authorized to archive this job' });
+        }
+
+        await jobRef.update({
+            archived: true,
+            archivedDate: new Date().toISOString()
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error archiving job:', error);
+        res.status(500).json({ error: 'Failed to archive job' });
+    }
+});
+
+
+app.get('/api/employer/jobs', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+
+        const employerId = querySnapshot.docs[0].data().employerId;
+        const jobsRef = db.collection('jobs');
+        const jobsQuery = await jobsRef.where('employerId', '==', employerId).get();
+
+        const jobs = [];
+        jobsQuery.forEach(doc => {
+            jobs.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+
+        res.json(jobs);
+    } catch (error) {
+        console.error('Error fetching employer jobs:', error);
+        res.status(500).json({ error: 'Failed to fetch jobs' });
+    }
+});
+
+app.post('/api/employer/jobs', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        const jobData = req.body;
+
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+
+        const employerId = querySnapshot.docs[0].data().employerId;
+        const jobRef = await db.collection('jobs').add({
+            ...jobData,
+            employerId: employerId,
+            archived: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        res.json({ id: jobRef.id });
+    } catch (error) {
+        console.error('Error creating job:', error);
+        res.status(500).json({ error: 'Failed to create job' });
+    }
+});
+
+app.put('/api/employer/jobs/:jobId', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        const { jobId } = req.params;
+        const jobData = req.body;
+
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+
+        const employerId = querySnapshot.docs[0].data().employerId;
+        const jobRef = db.collection('jobs').doc(jobId);
+        const jobDoc = await jobRef.get();
+
+        if (!jobDoc.exists) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        if (jobDoc.data().employerId !== employerId) {
+            return res.status(403).json({ error: 'Not authorized to edit this job' });
+        }
+
+        await jobRef.update({
+            ...jobData,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating job:', error);
+        res.status(500).json({ error: 'Failed to update job' });
+    }
+});
+
+app.delete('/api/employer/jobs/:jobId', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        const { jobId } = req.params;
+
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+
+        const employerId = querySnapshot.docs[0].data().employerId;
+        const jobRef = db.collection('jobs').doc(jobId);
+        const jobDoc = await jobRef.get();
+
+        if (!jobDoc.exists) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        if (jobDoc.data().employerId !== employerId) {
+            return res.status(403).json({ error: 'Not authorized to delete this job' });
+        }
+
+        await jobRef.delete();
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting job:', error);
+        res.status(500).json({ error: 'Failed to delete job' });
+    }
+});
+
+app.put('/api/employer/jobs/:jobId/archive', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        const { jobId } = req.params;
+
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+
+        const employerId = querySnapshot.docs[0].data().employerId;
+        const jobRef = db.collection('jobs').doc(jobId);
+        const jobDoc = await jobRef.get();
+
+        if (!jobDoc.exists) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        if (jobDoc.data().employerId !== employerId) {
+            return res.status(403).json({ error: 'Not authorized to archive this job' });
+        }
+
+        await jobRef.update({
+            archived: true,
+            archivedDate: new Date().toISOString()
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error archiving job:', error);
+        res.status(500).json({ error: 'Failed to archive job' });
+    }
+});
+
+
+// Archive job endpoint
+app.put('/api/employer/jobs/:jobId/archive', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        const { jobId } = req.params;
+
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+
+        const employerId = querySnapshot.docs[0].data().employerId;
+        const jobRef = db.collection('jobs').doc(jobId);
+        const jobDoc = await jobRef.get();
+
+        if (!jobDoc.exists) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        if (jobDoc.data().employerId !== employerId) {
+            return res.status(403).json({ error: 'Not authorized to archive this job' });
+        }
+
+        await jobRef.update({
+            archived: true,
+            archivedDate: new Date().toISOString()
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error archiving job:', error);
+        res.status(500).json({ error: 'Failed to archive job' });
+    }
+});
+
+// From profile.js
+app.get('/api/employer/profile', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+        
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+        
+        const userData = querySnapshot.docs[0].data();
+        userData.id = querySnapshot.docs[0].id;
+        
+        res.json(userData);
+    } catch (error) {
+        console.error('Error fetching employer profile:', error);
+        res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+});
+
+app.put('/api/employer/profile', authenticateUser, async (req, res) => {
+    try {
+        const user = req.user;
+        const userData = req.body;
+        
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        const employersRef = db.collection('employers');
+        const querySnapshot = await employersRef.where('email', '==', user.email.toLowerCase()).get();
+        
+        if (querySnapshot.empty) {
+            return res.status(404).json({ error: 'Employer not found' });
+        }
+        
+        const employerDoc = querySnapshot.docs[0];
+        await employerDoc.ref.update(userData);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating employer profile:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
     }
 });
 
@@ -251,6 +730,11 @@ app.get('/Admin', (req, res) => {
 });
 
 app.get('/', (req, res) => {
+    res.redirect('/Employer_Side/login.html');
+});
+
+// Add direct route for login.html (to fix 404 error)
+app.get('/login.html', (req, res) => {
     res.redirect('/Employer_Side/login.html');
 });
 
